@@ -17,15 +17,4 @@ public class DemoserverApplication {
     public OAuth2AuthorizationService authorizationService() {
         return new InMemoryOAuth2AuthorizationService();
     }
-
-//    @Bean public DefaultTokenServices tokenServices() {
-//
-//        DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
-//
-//        defaultTokenServices.setTokenStore(tokenStore());
-//        defaultTokenServices.setSupportRefreshToken(true);
-//
-//        return defaultTokenServices;
-//
-//    }
 }
