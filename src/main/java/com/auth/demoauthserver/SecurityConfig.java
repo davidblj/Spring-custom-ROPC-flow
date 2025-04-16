@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -84,7 +85,7 @@ public class SecurityConfig {
             .authorizeHttpRequests((authorize) ->
                 authorize.anyRequest().authenticated()
             )
-            // TODO: revisar si este redireccionamiento esta funcionando, y como reemplazarlo
+            // TODO: revisar si este redireccionamiento esta funcionando, y como reemplazarlo o si es necesario
             .exceptionHandling((exceptions) -> exceptions
                 .defaultAuthenticationEntryPointFor(
                     new LoginUrlAuthenticationEntryPoint("/login"),
@@ -106,7 +107,7 @@ public class SecurityConfig {
                     .anyRequest().authenticated()
             )
             .oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()))
-            // TODO: revisar si esta configuración
+            // TODO: revisar esta configuración
             .formLogin(Customizer.withDefaults());
 
         http.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
@@ -133,7 +134,8 @@ public class SecurityConfig {
         RegisteredClient oidcClient = RegisteredClient.withId(UUID.randomUUID().toString())
             .clientId("oidc-client")
             .clientSecret("secret")
-            // TODO: dejar solamente lo métodos de autenticación necesarios
+            // TODO: dejar solamente lo métodos de autenticación que estamos usando. Si OPENID no es necesario, también
+            //  quitar dicha configuración
             .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
@@ -144,7 +146,7 @@ public class SecurityConfig {
                 a.add(AuthorizationGrantType.CLIENT_CREDENTIALS);
             })
             .redirectUri("http://localhost:8083/login/oauth2/code/oidc-client")
-            // TODO: revisar si los scopes los vamos a necesitar
+            // TODO: revisar si los scopes son necesarios
             .scope(OidcScopes.OPENID)
             .scope(OidcScopes.PROFILE)
             .clientSettings(
@@ -153,6 +155,8 @@ public class SecurityConfig {
                     .build()
             )
             .tokenSettings(
+                // TODO: revisar el tiempo de caducidad. El flujo para refrescar recomendaría no usarlo por momento.
+                //  y manejar solamente el servidor de autenticación para revocación de tokens 
                 TokenSettings.builder()
                     .accessTokenFormat(OAuth2TokenFormat.SELF_CONTAINED)
                     .accessTokenTimeToLive(Duration.ofMinutes(300))
@@ -200,8 +204,9 @@ public class SecurityConfig {
 
     // generador de Oauth JWT para representar tokens generados por el servidor de autorización
     @Bean
-    public OAuth2TokenGenerator<?> tokenGenerator(JwtEncoder jwtEncoder) {
+    public OAuth2TokenGenerator<?> tokenGenerator(JwtEncoder jwtEncoder, OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer) {
         JwtGenerator jwtGenerator = new JwtGenerator(jwtEncoder);
+        jwtGenerator.setJwtCustomizer(jwtCustomizer);
         return new DelegatingOAuth2TokenGenerator(
             jwtGenerator
         );
@@ -210,5 +215,13 @@ public class SecurityConfig {
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder().build();
+    }
+
+    @Bean
+    public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
+        return context -> {
+            ROPCAuthenticationToken principal = context.getPrincipal();
+            context.getClaims().claim("user_info", principal.getJsonUser());
+        };
     }
 }

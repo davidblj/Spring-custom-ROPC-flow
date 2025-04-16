@@ -1,7 +1,5 @@
 package com.auth.demoauthserver;
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
@@ -13,6 +11,8 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.context.AuthorizationServerContext;
+import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.token.DefaultOAuth2TokenContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
@@ -39,11 +39,11 @@ public class CustomROPCTokenGenerator {
   public OAuth2AccessTokenResponse generarToken(User userPrincipal, String clientId) {
     
     RegisteredClient registeredClient = registeredClientRepository.findByClientId(clientId);
-    AuthorizationGrantType grantType = new AuthorizationGrantType("ROCP");
+    AuthorizationGrantType grantType = new AuthorizationGrantType("ROPC");
 
     OAuth2Token jwt = crearToken(registeredClient, userPrincipal, grantType);
     guardarToken(userPrincipal, registeredClient, grantType, jwt);
-
+    
     return OAuth2AccessTokenResponse.withToken(jwt.getTokenValue())
         .tokenType(OAuth2AccessToken.TokenType.BEARER)
         .scopes(Set.of("openid", "profile"))
@@ -52,18 +52,26 @@ public class CustomROPCTokenGenerator {
   }
 
   private OAuth2Token crearToken(RegisteredClient registeredClient, User userPrincipal, AuthorizationGrantType grantType) {
-    Authentication principal = new UsernamePasswordAuthenticationToken(userPrincipal.getUsername(), null, userPrincipal.getAuthorities());
+    String jsonUser = "{ \"userId\": \"ID_VALUE\"}";
+    ROPCAuthenticationToken ropcAuthenticationToken = new ROPCAuthenticationToken(
+        userPrincipal.getUsername(),
+        "",
+        userPrincipal.getAuthorities(),
+        jsonUser
+    );
     OAuth2TokenContext context = DefaultOAuth2TokenContext.builder()
         .registeredClient(registeredClient)
-        .principal(principal)
+        .principal(ropcAuthenticationToken)
+        // TODO: verificar si es necesario enviar los scopes, y que información retorna por enviarlos en el jwt
         .authorizedScopes(Set.of("openid", "profile"))
         .tokenType(OAuth2TokenType.ACCESS_TOKEN)
         .authorizationGrantType(grantType)
-        .authorizationGrant(principal)
+        .authorizationGrant(ropcAuthenticationToken)
+        .authorizationServerContext(getAuthorizationServerContext())
         .build();
     OAuth2Token jwt = tokenGenerator.generate(context);
     if (!(jwt instanceof Jwt)) {
-      throw new IllegalStateException("TokenGenerator did not return a JWT");
+      throw new IllegalStateException("La generación de token no retornó un JWT");
     }
     return jwt;
   }
@@ -78,14 +86,32 @@ public class CustomROPCTokenGenerator {
         jwt.getExpiresAt(),
         Set.of("openid", "profile")
     );
-    
     OAuth2Authorization authorization = OAuth2Authorization.withRegisteredClient(registeredClient)
         .principalName(userPrincipal.getUsername())
         .authorizationGrantType(grantType)
         .token(accessToken, metadata -> metadata.put(Jwt.class.getName(), jwt))
         .build();
-    
     // se guarda el token en memoria en el servidor de autorización de Spring
     authorizationService.save(authorization);
+  }
+
+  // El contexto no existe cuando el servicio no pasa por el 'securityMatcher' donde se configuró el servidor de recursos,
+  // por lo que generamos un dummy o un fallback. El contexto es necesario cuando queremos agregar claims personalizables 
+  // usando OAuth2TokenCustomizer
+  private static AuthorizationServerContext getAuthorizationServerContext() {
+    AuthorizationServerContext authorizationServerContext = new AuthorizationServerContext() {
+      
+      @Override
+      public String getIssuer() {
+        return "http://localhost:8080";
+      }
+
+      @Override
+      public AuthorizationServerSettings getAuthorizationServerSettings() {
+        return null;
+      }
+      
+    };
+    return authorizationServerContext;
   }
 }
