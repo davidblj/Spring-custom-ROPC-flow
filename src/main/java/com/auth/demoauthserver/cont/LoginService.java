@@ -22,11 +22,11 @@ public class LoginService {
   @PostMapping("/custom-token")
   public ResponseEntity<OAuth2AccessTokenResponse> getToken() {
     
-    // Step 1: Validate credentials with legacy backend (call legacy service)
+    // antes de continuar validamos las credenciales (de la misma manera que se esta hoy aciendo en las app,
+    // ya sea consultando en BD o consumiendo un servicio a SVN)
 
+    // Creamos el principal y luego generamos y guardamos el token (jwt oauth complient) de autenticación
     User user = new User("EXNOdjaramib", "", List.of(new SimpleGrantedAuthority("ROLE_USER")));
-
-    // Step 3: Use TokenGenerator to create tokens
     OAuth2AccessTokenResponse tokenResponse = tokenService.generateToken(user, "oidc-client");
 
     return ResponseEntity.ok(tokenResponse);

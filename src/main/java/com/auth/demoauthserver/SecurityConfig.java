@@ -33,10 +33,7 @@ import org.springframework.security.oauth2.server.authorization.settings.Authori
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
-import org.springframework.security.oauth2.server.authorization.token.DelegatingOAuth2TokenGenerator;
-import org.springframework.security.oauth2.server.authorization.token.OAuth2AccessTokenGenerator;
-import org.springframework.security.oauth2.server.authorization.token.OAuth2RefreshTokenGenerator;
-import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
+import org.springframework.security.oauth2.server.authorization.token.*;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
@@ -151,7 +148,7 @@ public class SecurityConfig {
             )
             .tokenSettings(
                 TokenSettings.builder()
-                    .accessTokenFormat(OAuth2TokenFormat.REFERENCE)
+                    .accessTokenFormat(OAuth2TokenFormat.SELF_CONTAINED)
                     .accessTokenTimeToLive(Duration.ofMinutes(300))
                     .refreshTokenTimeToLive(Duration.ofHours(2))
                     .build())
@@ -196,12 +193,9 @@ public class SecurityConfig {
 
     @Bean
     public OAuth2TokenGenerator<?> tokenGenerator(JwtEncoder jwtEncoder) {
-        // TODO: remove refreshTokenGenerator
-        OAuth2AccessTokenGenerator accessTokenGenerator = new OAuth2AccessTokenGenerator();
-        OAuth2RefreshTokenGenerator refreshTokenGenerator = new OAuth2RefreshTokenGenerator();
+        JwtGenerator jwtGenerator = new JwtGenerator(jwtEncoder);
         return new DelegatingOAuth2TokenGenerator(
-            accessTokenGenerator,
-            refreshTokenGenerator
+            jwtGenerator
         );
     }
 
