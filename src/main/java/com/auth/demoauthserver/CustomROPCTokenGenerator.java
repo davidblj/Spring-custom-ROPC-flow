@@ -11,7 +11,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
-import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.token.DefaultOAuth2TokenContext;
@@ -23,41 +22,55 @@ import java.time.Instant;
 import java.util.Set;
 
 @Service
-public class TokenService {
+public class CustomROPCTokenGenerator {
 
   private final RegisteredClientRepository registeredClientRepository;
   private final OAuth2AuthorizationService authorizationService;
   private final OAuth2TokenGenerator<?> tokenGenerator;
 
-  public TokenService(RegisteredClientRepository registeredClientRepository,
-                            OAuth2AuthorizationService authorizationService,
-                            OAuth2TokenGenerator<?> tokenGenerator) {
+  public CustomROPCTokenGenerator(RegisteredClientRepository registeredClientRepository,
+                                  OAuth2AuthorizationService authorizationService,
+                                  OAuth2TokenGenerator<?> tokenGenerator) {
     this.registeredClientRepository = registeredClientRepository;
     this.authorizationService = authorizationService;
     this.tokenGenerator = tokenGenerator;
   }
 
-  public OAuth2AccessTokenResponse generateToken(User userPrincipal, String clientId) {
+  public OAuth2AccessTokenResponse generarToken(User userPrincipal, String clientId) {
+    
     RegisteredClient registeredClient = registeredClientRepository.findByClientId(clientId);
-
-    Authentication principal = new UsernamePasswordAuthenticationToken(userPrincipal.getUsername(), null, userPrincipal.getAuthorities());
     AuthorizationGrantType grantType = new AuthorizationGrantType("ROCP");
 
+    OAuth2Token jwt = crearToken(registeredClient, userPrincipal, grantType);
+    guardarToken(userPrincipal, registeredClient, grantType, jwt);
+
+    return OAuth2AccessTokenResponse.withToken(jwt.getTokenValue())
+        .tokenType(OAuth2AccessToken.TokenType.BEARER)
+        .scopes(Set.of("openid", "profile"))
+        .expiresIn(jwt.getExpiresAt().getEpochSecond() - Instant.now().getEpochSecond())
+        .build();
+  }
+
+  private OAuth2Token crearToken(RegisteredClient registeredClient, User userPrincipal, AuthorizationGrantType grantType) {
+    Authentication principal = new UsernamePasswordAuthenticationToken(userPrincipal.getUsername(), null, userPrincipal.getAuthorities());
     OAuth2TokenContext context = DefaultOAuth2TokenContext.builder()
         .registeredClient(registeredClient)
         .principal(principal)
         .authorizedScopes(Set.of("openid", "profile"))
         .tokenType(OAuth2TokenType.ACCESS_TOKEN)
         .authorizationGrantType(grantType)
-        .authorizationGrant(principal) // You could pass a custom grant here
+        .authorizationGrant(principal)
         .build();
-
-//    OAuth2AccessToken accessToken = (OAuth2AccessToken) tokenGenerator.generate(context);
     OAuth2Token jwt = tokenGenerator.generate(context);
     if (!(jwt instanceof Jwt)) {
       throw new IllegalStateException("TokenGenerator did not return a JWT");
     }
+    return jwt;
+  }
 
+  private void guardarToken(User userPrincipal, RegisteredClient registeredClient, AuthorizationGrantType grantType, OAuth2Token jwt) {
+    // se enmascara el token en el tipo OAuth2AccessToken para que el servicio de autorización lo registre bajo esta clase
+    // y luego permita ser encontrado usando 'authorizationService.findByToken(jwt, OAuth2TokenType.ACCESS_TOKEN)'
     OAuth2AccessToken accessToken = new OAuth2AccessToken(
         OAuth2AccessToken.TokenType.BEARER,
         jwt.getTokenValue(),
@@ -71,13 +84,8 @@ public class TokenService {
         .authorizationGrantType(grantType)
         .token(accessToken, metadata -> metadata.put(Jwt.class.getName(), jwt))
         .build();
-
+    
+    // se guarda el token en memoria en el servidor de autorización de Spring
     authorizationService.save(authorization);
-
-    return OAuth2AccessTokenResponse.withToken(jwt.getTokenValue())
-        .tokenType(OAuth2AccessToken.TokenType.BEARER)
-        .scopes(Set.of("openid", "profile"))
-        .expiresIn(jwt.getExpiresAt().getEpochSecond() - Instant.now().getEpochSecond())
-        .build();
   }
 }

@@ -54,6 +54,9 @@ public class SecurityConfig {
     @Autowired
     TokenFilter jwtTokenFilter;
 
+    // es necesario crear un security matcher para las rutas no protegidas por el servidor de recursos
+    // debido a que dichas rutas no se pueden excluir cuando usamos 'oauth2ResourceServer' en el filtro
+    // genérico 'defaultSecurityFilterChain'
     @Bean
     @Order(0)
     public SecurityFilterChain customLoginEndpoints(HttpSecurity http) throws Exception {
@@ -67,8 +70,7 @@ public class SecurityConfig {
 
         return http.build();
     }
-
-    // TODO: can i delete this ?
+    
     @Bean
     @Order(1)  //Ordered.HIGHEST_PRECEDENCE
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
@@ -82,6 +84,7 @@ public class SecurityConfig {
             .authorizeHttpRequests((authorize) ->
                 authorize.anyRequest().authenticated()
             )
+            // TODO: revisar si este redireccionamiento esta funcionando, y como reemplazarlo
             .exceptionHandling((exceptions) -> exceptions
                 .defaultAuthenticationEntryPointFor(
                     new LoginUrlAuthenticationEntryPoint("/login"),
@@ -103,6 +106,7 @@ public class SecurityConfig {
                     .anyRequest().authenticated()
             )
             .oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()))
+            // TODO: revisar si esta configuración
             .formLogin(Customizer.withDefaults());
 
         http.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
@@ -129,6 +133,7 @@ public class SecurityConfig {
         RegisteredClient oidcClient = RegisteredClient.withId(UUID.randomUUID().toString())
             .clientId("oidc-client")
             .clientSecret("secret")
+            // TODO: dejar solamente lo métodos de autenticación necesarios
             .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
@@ -139,6 +144,7 @@ public class SecurityConfig {
                 a.add(AuthorizationGrantType.CLIENT_CREDENTIALS);
             })
             .redirectUri("http://localhost:8083/login/oauth2/code/oidc-client")
+            // TODO: revisar si los scopes los vamos a necesitar
             .scope(OidcScopes.OPENID)
             .scope(OidcScopes.PROFILE)
             .clientSettings(
@@ -186,11 +192,13 @@ public class SecurityConfig {
         return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
     }
 
+    // encoder que usa spring para generar los tokens JWT
     @Bean
     public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwkSource) {
         return new NimbusJwtEncoder(jwkSource);
     }
 
+    // generador de Oauth JWT para representar tokens generados por el servidor de autorización
     @Bean
     public OAuth2TokenGenerator<?> tokenGenerator(JwtEncoder jwtEncoder) {
         JwtGenerator jwtGenerator = new JwtGenerator(jwtEncoder);
