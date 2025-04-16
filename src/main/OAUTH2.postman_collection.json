@@ -1,0 +1,324 @@
+{
+	"info": {
+		"_postman_id": "6d29ec58-8e56-475f-aede-fe7b22c678e6",
+		"name": "OAUTH2",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1085937"
+	},
+	"item": [
+		{
+			"name": "get info",
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "grant_type",
+							"value": "authorization_code",
+							"type": "string"
+						},
+						{
+							"key": "client_authentication",
+							"value": "header",
+							"type": "string"
+						},
+						{
+							"key": "authUrl",
+							"value": "http://localhost:8080/oauth2/authorize",
+							"type": "string"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "http://localhost:8083/login/oauth2/code/oidc-client",
+							"type": "string"
+						},
+						{
+							"key": "accessTokenUrl",
+							"value": "http://localhost:8080/oauth2/token",
+							"type": "string"
+						},
+						{
+							"key": "tokenName",
+							"value": "new",
+							"type": "string"
+						},
+						{
+							"key": "scope",
+							"value": "openid",
+							"type": "string"
+						},
+						{
+							"key": "clientSecret",
+							"value": "secret",
+							"type": "string"
+						},
+						{
+							"key": "clientId",
+							"value": "oidc-client",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/info",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"info"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get token manually (ROPC)",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/login/custom-token",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"login",
+						"custom-token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get token (CLIENT CREDENTIALS FLOW)",
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "tokenName",
+							"value": "new",
+							"type": "string"
+						},
+						{
+							"key": "client_authentication",
+							"value": "body",
+							"type": "string"
+						},
+						{
+							"key": "scope",
+							"value": "openid",
+							"type": "string"
+						},
+						{
+							"key": "clientSecret",
+							"value": "secret",
+							"type": "string"
+						},
+						{
+							"key": "clientId",
+							"value": "oidc-client",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "grant_type",
+						"value": "refresh_token",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "code",
+						"value": "9uVTt-XsWI_56gTYPezjJV_M90mqkLYbXI2cWhKJq0U0iCJDbNsdEMzVcztqU7JpWeV1F44vFdoSeC2RsvErHa9eDe_3zqOBamKPoTrbtp3cg-_IWQsIwg0xSgsNxucC",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "redirect_uri",
+						"value": "http://localhost:8081/login/oauth2/code/oidc-client",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "client_id",
+						"value": "oidc-client",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "client_secret",
+						"value": "secret",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "code",
+							"value": "UZv3x1lIKC-7qywNYP-0Cjgj0fKg3PP4DYmzGrAWj60Qpgv5dsgDVes8-beZ27B0qEzDD7qVA6gH9Loc4y_tncY5podQCmchloTp7ZWJ6AGVhGhqw_eAL06iC8Lp03L0",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "redirect_uri",
+							"value": "http://localhost:8080/login/oauth2/code/oidc-client",
+							"type": "text"
+						},
+						{
+							"key": "grant_type",
+							"value": "authorization_code",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "client_id",
+							"value": "oidc-client",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "secret",
+							"type": "text"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "text"
+						},
+						{
+							"key": "token",
+							"value": "eyJraWQiOiIxYjA3YzRkNy0zYjhhLTQ4OWQtYmEwNS03NDY2ZDEzYzhiN2QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJvaWRjLWNsaWVudCIsImF1ZCI6Im9pZGMtY2xpZW50IiwibmJmIjoxNzQwNTQ4MjI4LCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAiLCJleHAiOjE3NDA1NjYyMjgsImlhdCI6MTc0MDU0ODIyOCwianRpIjoiMmQzMDcyZGEtNmNiMS00ZDNhLTlhMmYtMGQ2YzFiNWFmNmUyIn0.dwCAhv3IVYTbWLg-b4oh5u9PuUQzLBjaHw1zsS34wJUDyUP_lC2iHqupAzhO6Vn9DZK_lz6aMPQ4-y3N4w4FwYUAszd8Kjc0VZiD2Kiy9OmYE_1QCdwXywDsG5P1MXqt_-YUBg8bUB6NpzT8gjO99SvJIBCDKwFNp26-4sI220827hBsXgWh9bej0fra6ZsTSuQ-v1DYH2yhbWHjxvq-R-CUbi9rgVbxqmqea6GYXDPr69VcUdR4-E7a6ENZRk4jJYEi1hbc6s1pL_Z6xveWhe2kIwPbKGHkfXOilgclLU5fbuKvPoaiQWKu94CN89IbGOKjMNFpNQu9H95OK5ja8g",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8080/info/token",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"info",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "logout",
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "grant_type",
+						"value": "refresh_token",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "code",
+						"value": "9uVTt-XsWI_56gTYPezjJV_M90mqkLYbXI2cWhKJq0U0iCJDbNsdEMzVcztqU7JpWeV1F44vFdoSeC2RsvErHa9eDe_3zqOBamKPoTrbtp3cg-_IWQsIwg0xSgsNxucC",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "redirect_uri",
+						"value": "http://localhost:8081/login/oauth2/code/oidc-client",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "client_id",
+						"value": "oidc-client",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "client_secret",
+						"value": "secret",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/info/logout?eyJraWQiOiI4ZTk0MjBlMi0zYjVlLTQyZjEtOWM3Ny0xMjg2ZjJiYzZjOGIiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJFWE5PZGphcmFtaWIiLCJhdWQiOiJvaWRjLWNsaWVudCIsIm5iZiI6MTc0NDgzMzg0OCwidXNlcl9pbmZvIjoieyBcInVzZXJJZFwiOiBcIklEX1ZBTFVFXCJ9Iiwic2NvcGUiOlsicHJvZmlsZSIsIm9wZW5pZCJdLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAiLCJleHAiOjE3NDQ4NTE4NDgsImlhdCI6MTc0NDgzMzg0OCwianRpIjoiM2E3YzA1ZmItOGZmYi00YTNjLWIxOGMtNmMwMDhlZjc1MWQ4In0.QN6BDl2zQBv0Z_ubyq-yZbfKews4JGjRBX3BumITqB17aQImatx5xC6-a-ZhruPX4mNgQPHhbsBLi7LDI5z5jEtTm42fK9VTpocz3WCoKOkJJaGOeuSx2UZJi9aEmA2bFft2h8krfQGRHlCuOr96iP8pCURfbo2jh-LUoPvqIONof1M-eC_RQx6Pd4Vu9mhBWrbDU8QS0KJ7Vq4ywwDeZEKQ2-o0xqx78jfzUTdko5oaruSj8jg3fL-IdtJSTMgWo20oluha_Sr2r1xGgJRJM1TQE2MvuNMX6c0klYU-1zTIZki2kbn38YMadoesGEmF9iFKhrQpsalQZRvO4RmZyg",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"info",
+						"logout"
+					],
+					"query": [
+						{
+							"key": "eyJraWQiOiI4ZTk0MjBlMi0zYjVlLTQyZjEtOWM3Ny0xMjg2ZjJiYzZjOGIiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJFWE5PZGphcmFtaWIiLCJhdWQiOiJvaWRjLWNsaWVudCIsIm5iZiI6MTc0NDgzMzg0OCwidXNlcl9pbmZvIjoieyBcInVzZXJJZFwiOiBcIklEX1ZBTFVFXCJ9Iiwic2NvcGUiOlsicHJvZmlsZSIsIm9wZW5pZCJdLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAiLCJleHAiOjE3NDQ4NTE4NDgsImlhdCI6MTc0NDgzMzg0OCwianRpIjoiM2E3YzA1ZmItOGZmYi00YTNjLWIxOGMtNmMwMDhlZjc1MWQ4In0.QN6BDl2zQBv0Z_ubyq-yZbfKews4JGjRBX3BumITqB17aQImatx5xC6-a-ZhruPX4mNgQPHhbsBLi7LDI5z5jEtTm42fK9VTpocz3WCoKOkJJaGOeuSx2UZJi9aEmA2bFft2h8krfQGRHlCuOr96iP8pCURfbo2jh-LUoPvqIONof1M-eC_RQx6Pd4Vu9mhBWrbDU8QS0KJ7Vq4ywwDeZEKQ2-o0xqx78jfzUTdko5oaruSj8jg3fL-IdtJSTMgWo20oluha_Sr2r1xGgJRJM1TQE2MvuNMX6c0klYU-1zTIZki2kbn38YMadoesGEmF9iFKhrQpsalQZRvO4RmZyg",
+							"value": null
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
